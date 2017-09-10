@@ -3,24 +3,14 @@ using System.Globalization;
 
 namespace LINQtoCSV
 {
-
     /// <summary>
-    /// Summary description for CsvColumnAttribute
+    ///     Summary description for CsvColumnAttribute
     /// </summary>
-
-    [System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property, 
-                           AllowMultiple = false)
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)
     ]
-    public class CsvColumnAttribute : System.Attribute
+    public class CsvColumnAttribute : Attribute
     {
-        internal const int mc_DefaultFieldIndex = Int32.MaxValue;
-
-        public string Name { get; set; }
-        public bool CanBeNull { get; set; }
-        public int FieldIndex { get; set; }
-        public NumberStyles NumberStyle { get; set; }
-        public string OutputFormat { get; set; }
-        public int CharLength { get; set; }
+        internal const int mc_DefaultFieldIndex = int.MaxValue;
 
         public CsvColumnAttribute()
         {
@@ -32,12 +22,12 @@ namespace LINQtoCSV
         }
 
         public CsvColumnAttribute(
-                    string name, 
-                    int fieldIndex, 
-                    bool canBeNull,
-                    string outputFormat,
-                    NumberStyles numberStyle,
-                    int charLength)
+            string name,
+            int fieldIndex,
+            bool canBeNull,
+            string outputFormat,
+            NumberStyles numberStyle,
+            int charLength)
         {
             Name = name;
             FieldIndex = fieldIndex;
@@ -47,5 +37,12 @@ namespace LINQtoCSV
 
             CharLength = charLength;
         }
+
+        public string Name { get; set; }
+        public bool CanBeNull { get; set; }
+        public int FieldIndex { get; set; }
+        public NumberStyles NumberStyle { get; set; }
+        public string OutputFormat { get; set; }
+        public int CharLength { get; set; }
     }
 }

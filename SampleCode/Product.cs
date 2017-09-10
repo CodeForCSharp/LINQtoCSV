@@ -7,7 +7,7 @@ namespace SampleCode
 // will warn they are unused or unassigned. Disable those warnings.
 #pragma warning disable 0169, 0414, 0649
 
-    class Product
+    internal class Product
     {
         [CsvColumn(Name = "ProductName", FieldIndex = 1)]
         public string Name { get; set; }

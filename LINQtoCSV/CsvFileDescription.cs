@@ -1,18 +1,32 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace LINQtoCSV
 {
     /// <summary>
-    /// Summary description for CsvFileDescription
+    ///     Summary description for CsvFileDescription
     /// </summary>
     public class CsvFileDescription
     {
         // Culture used to process the CSV values, specifically numbers and dates.
-        private CultureInfo m_cultureInfo = CultureInfo.CurrentCulture;
 
-        private int m_maximumNbrExceptions = 100;
+        // ---------------
+
+        public CsvFileDescription()
+        {
+            FileCultureInfo = CultureInfo.CurrentCulture;
+            FirstLineHasColumnNames = true;
+            EnforceCsvColumnAttribute = false;
+            QuoteAllFields = false;
+            SeparatorChar = ',';
+            TextEncoding = Encoding.UTF8;
+            DetectEncodingFromByteOrderMarks = true;
+            IgnoreTrailingSeparatorChar = false;
+            NoSeparatorChar = false;
+            UseFieldIndexForReadingData = false;
+            UseOutputFormatForParsingCsvValue = false;
+            IgnoreUnknownColumns = false;
+        }
 
         // --------------
 
@@ -56,15 +70,11 @@ namespace LINQtoCSV
         //
         public string FileCultureName
         {
-            get { return m_cultureInfo.Name; }
-            set { m_cultureInfo = new CultureInfo(value); }
+            get => FileCultureInfo.Name;
+            set => FileCultureInfo = new CultureInfo(value);
         }
 
-        public CultureInfo FileCultureInfo
-        {
-            get { return m_cultureInfo; }
-            set { m_cultureInfo = value; }
-        }
+        public CultureInfo FileCultureInfo { get; set; }
 
         // When reading a file, exceptions thrown while the file is being read
         // are captured in an aggregate exception. That aggregate exception is then
@@ -75,43 +85,22 @@ namespace LINQtoCSV
         // immediately.
         //
         // To not have a maximum at all, set this to -1.
-        public int MaximumNbrExceptions
-        {
-            get { return m_maximumNbrExceptions; }
-            set { m_maximumNbrExceptions = value; }
-        }
+        public int MaximumNbrExceptions { get; set; } = 100;
 
         // Character encoding. Defaults should work in most cases.
         // However, when reading or writing non-English files, you may want to use
         // Unicode encoding.
         public Encoding TextEncoding { get; set; }
+
         public bool DetectEncodingFromByteOrderMarks { get; set; }
 
         public bool UseFieldIndexForReadingData { get; set; }
         public bool UseOutputFormatForParsingCsvValue { get; set; }
         public bool IgnoreTrailingSeparatorChar { get; set; }
-        
+
         /// <summary>
-        /// If set to true, wil read only the fields specified as attributes, and will discard other fields in the CSV file
+        ///     If set to true, wil read only the fields specified as attributes, and will discard other fields in the CSV file
         /// </summary>
         public bool IgnoreUnknownColumns { get; set; }
-
-        // ---------------
-
-        public CsvFileDescription()
-        {
-            m_cultureInfo = CultureInfo.CurrentCulture;
-            FirstLineHasColumnNames = true;
-            EnforceCsvColumnAttribute = false;
-            QuoteAllFields = false;
-            SeparatorChar = ',';
-            TextEncoding = Encoding.UTF8;
-            DetectEncodingFromByteOrderMarks = true;
-            IgnoreTrailingSeparatorChar = false;
-            NoSeparatorChar = false;
-            UseFieldIndexForReadingData = false;
-            UseOutputFormatForParsingCsvValue = false;
-            IgnoreUnknownColumns = false;
-        }
     }
 }

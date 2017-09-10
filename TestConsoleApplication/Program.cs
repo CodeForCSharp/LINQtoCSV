@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
-
 using LINQtoCSV;
 
 namespace TestConsoleApplication
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // ------------------------------------
             // Reading files, no erros
@@ -22,9 +21,9 @@ namespace TestConsoleApplication
 
             CsvContext cc = new CsvContext();
 
-            IEnumerable<ProductData> dataRows_namesUs = null;
-            IEnumerable<TestDataRow> dataRows_namesUsRaw = null;
-            CsvFileDescription fileDescription_namesUs = new CsvFileDescription
+            IEnumerable<ProductData> dataRowsNamesUs = null;
+            IEnumerable<TestDataRow> dataRowsNamesUsRaw = null;
+            CsvFileDescription fileDescriptionNamesUs = new CsvFileDescription
             {
                 SeparatorChar = ',', // default is ','
                 FirstLineHasColumnNames = true,
@@ -34,31 +33,29 @@ namespace TestConsoleApplication
 
             try
             {
-                dataRows_namesUs =
-                    cc.Read<ProductData>("../../TestFiles/goodfile_us.csv", fileDescription_namesUs);
+                dataRowsNamesUs =
+                    cc.Read<ProductData>("../../TestFiles/goodfile_us.csv", fileDescriptionNamesUs);
 
-                Utils.OutputData<ProductData>(dataRows_namesUs, "Good file, English US culture");
+                Utils.OutputData(dataRowsNamesUs, "Good file, English US culture");
 
                 // -----------
                 // Manually change contents of file, to see whether file is read again with new values.
 
-                Utils.OutputData<ProductData>(dataRows_namesUs, "Good file, English US culture, second read");
+                Utils.OutputData(dataRowsNamesUs, "Good file, English US culture, second read");
 
                 // ------------
                 // Partial read - read just one record from the file
 
-                foreach (ProductData row in dataRows_namesUs)
-                {
+                foreach (var row in dataRowsNamesUs)
                     break;
-                }
 
                 // -----------
                 // Read raw data rows
 
-                dataRows_namesUsRaw =
-                    cc.Read<TestDataRow>("../../TestFiles/goodfile_us.csv", fileDescription_namesUs);
+                dataRowsNamesUsRaw =
+                    cc.Read<TestDataRow>("../../TestFiles/goodfile_us.csv", fileDescriptionNamesUs);
 
-                Utils.OutputData<TestDataRow>(dataRows_namesUsRaw, "Good file, English US culture, Raw data rows");
+                Utils.OutputData(dataRowsNamesUsRaw, "Good file, English US culture, Raw data rows");
             }
             catch (Exception e)
             {
@@ -73,7 +70,7 @@ namespace TestConsoleApplication
             // fields that have a FieldIndex can be used, which means having
             // a CsvColumn attribute.
 
-            CsvFileDescription fileDescription_nonamesNl = new CsvFileDescription
+            CsvFileDescription fileDescriptionNonamesNl = new CsvFileDescription
             {
                 SeparatorChar = '\t', // tab character
                 FirstLineHasColumnNames = false,
@@ -83,10 +80,10 @@ namespace TestConsoleApplication
 
             try
             {
-                IEnumerable<ProductData> dataRows_nonamesNl =
-                    cc.Read<ProductData>("../../TestFiles/goodfile_nl.csv", fileDescription_nonamesNl);
+                IEnumerable<ProductData> dataRowsNonamesNl =
+                    cc.Read<ProductData>("../../TestFiles/goodfile_nl.csv", fileDescriptionNonamesNl);
 
-                Utils.OutputData<ProductData>(dataRows_nonamesNl, "Good file, Dutch culture");
+                Utils.OutputData(dataRowsNonamesNl, "Good file, Dutch culture");
             }
             catch (Exception e)
             {
@@ -101,7 +98,7 @@ namespace TestConsoleApplication
             // fields that have a FieldIndex can be used, which means having
             // a CsvColumn attribute.
 
-            CsvFileDescription fileDescription_nonamesNl_stream = new CsvFileDescription
+            CsvFileDescription fileDescriptionNonamesNlStream = new CsvFileDescription
             {
                 SeparatorChar = '\t', // tab character
                 FirstLineHasColumnNames = false,
@@ -111,13 +108,13 @@ namespace TestConsoleApplication
 
             try
             {
-                using (StreamReader sr =
+                using (var sr =
                     new StreamReader("../../TestFiles/goodfile_nl.csv", Encoding.UTF8))
                 {
-                    IEnumerable<ProductData> dataRows_nonamesNl =
-                        cc.Read<ProductData>(sr, fileDescription_nonamesNl_stream);
+                    IEnumerable<ProductData> dataRowsNonamesNl =
+                        cc.Read<ProductData>(sr, fileDescriptionNonamesNlStream);
 
-                    Utils.OutputData<ProductData>(dataRows_nonamesNl, "Good file, Dutch culture, using stream");
+                    Utils.OutputData(dataRowsNonamesNl, "Good file, Dutch culture, using stream");
                 }
             }
             catch (Exception e)
@@ -133,9 +130,9 @@ namespace TestConsoleApplication
             try
             {
                 IEnumerable<ProductData_DuplicateIndices> dataRows2 =
-                    cc.Read<ProductData_DuplicateIndices>("../../TestFiles/goodfile_nl.csv", fileDescription_nonamesNl);
+                    cc.Read<ProductData_DuplicateIndices>("../../TestFiles/goodfile_nl.csv", fileDescriptionNonamesNl);
 
-                Utils.OutputData<ProductData_DuplicateIndices>(dataRows2, "Good file, Dutch culture");
+                Utils.OutputData(dataRows2, "Good file, Dutch culture");
             }
             catch (Exception e)
             {
@@ -147,9 +144,10 @@ namespace TestConsoleApplication
             try
             {
                 IEnumerable<ProductData_MissingFieldIndex> dataRows2 =
-                    cc.Read<ProductData_MissingFieldIndex>("../../TestFiles/goodfile_nl.csv", fileDescription_nonamesNl);
+                    cc.Read<ProductData_MissingFieldIndex>("../../TestFiles/goodfile_nl.csv",
+                        fileDescriptionNonamesNl);
 
-                Utils.OutputData<ProductData_MissingFieldIndex>(dataRows2, "Good file, Dutch culture");
+                Utils.OutputData(dataRows2, "Good file, Dutch culture");
             }
             catch (Exception e)
             {
@@ -159,7 +157,7 @@ namespace TestConsoleApplication
             // CsvFileDescription.EnforceCsvColumnAttribute is false, but needs to be true because
             // CsvFileDescription.FirstLineHasColumnNames is false.
 
-            CsvFileDescription fileDescription_bad = new CsvFileDescription
+            CsvFileDescription fileDescriptionBad = new CsvFileDescription
             {
                 SeparatorChar = '\t', // tab character
                 FirstLineHasColumnNames = false,
@@ -169,10 +167,10 @@ namespace TestConsoleApplication
 
             try
             {
-                IEnumerable<ProductData> dataRows_nonamesNl_bad =
-                    cc.Read<ProductData>("../../TestFiles/goodfile_nl.csv", fileDescription_bad);
+                IEnumerable<ProductData> dataRowsNonamesNlBad =
+                    cc.Read<ProductData>("../../TestFiles/goodfile_nl.csv", fileDescriptionBad);
 
-                Utils.OutputData<ProductData>(dataRows_nonamesNl_bad, "Good file, Dutch culture");
+                Utils.OutputData(dataRowsNonamesNlBad, "Good file, Dutch culture");
             }
             catch (Exception e)
             {
@@ -184,10 +182,10 @@ namespace TestConsoleApplication
 
             try
             {
-                IEnumerable<ProductData> dataRows_namesUs_3 =
-                    cc.Read<ProductData>("../../TestFiles/badfile_unknownname.csv", fileDescription_namesUs);
+                IEnumerable<ProductData> dataRowsNamesUs3 =
+                    cc.Read<ProductData>("../../TestFiles/badfile_unknownname.csv", fileDescriptionNamesUs);
 
-                Utils.OutputData<ProductData>(dataRows_namesUs_3, "Bad file, English US culture, unknown name");
+                Utils.OutputData(dataRowsNamesUs3, "Bad file, English US culture, unknown name");
             }
             catch (Exception e)
             {
@@ -199,7 +197,7 @@ namespace TestConsoleApplication
             // Read file with names, only columns with CsvColumn attribute participate.
             // But one name matches a column without CsvColumn attribute.
 
-            CsvFileDescription fileDescription_namesUs_enforceCsvColumn = new CsvFileDescription
+            CsvFileDescription fileDescriptionNamesUsEnforceCsvColumn = new CsvFileDescription
             {
                 SeparatorChar = ',', // default is ','
                 FirstLineHasColumnNames = true,
@@ -209,10 +207,10 @@ namespace TestConsoleApplication
 
             try
             {
-                IEnumerable<ProductData> dataRows_namesUs_2 =
-                    cc.Read<ProductData>("../../TestFiles/goodfile_us.csv", fileDescription_namesUs_enforceCsvColumn);
+                IEnumerable<ProductData> dataRowsNamesUs2 =
+                    cc.Read<ProductData>("../../TestFiles/goodfile_us.csv", fileDescriptionNamesUsEnforceCsvColumn);
 
-                Utils.OutputData<ProductData>(dataRows_namesUs_2, "Good file, English US culture");
+                Utils.OutputData(dataRowsNamesUs2, "Good file, English US culture");
             }
             catch (Exception e)
             {
@@ -225,7 +223,7 @@ namespace TestConsoleApplication
             // * A row with too many fields
             // * Rows with badly formatted data - letters in numeric fields, bad dates
 
-            CsvFileDescription fileDescription_nonamesUs = new CsvFileDescription
+            CsvFileDescription fileDescriptionNonamesUs = new CsvFileDescription
             {
                 SeparatorChar = ',', // default is ','
                 FirstLineHasColumnNames = true,
@@ -235,12 +233,12 @@ namespace TestConsoleApplication
 
             try
             {
-                IEnumerable<ProductData> dataRows_namesUs_dataerrors =
-                    cc.Read<ProductData>("../../TestFiles/badfile_us_dataerrors.csv", fileDescription_nonamesUs);
+                IEnumerable<ProductData> dataRowsNamesUsDataerrors =
+                    cc.Read<ProductData>("../../TestFiles/badfile_us_dataerrors.csv", fileDescriptionNonamesUs);
 
-                Utils.OutputData<ProductData>(
-                        dataRows_namesUs_dataerrors,
-                        "Bad file, English US culture, various data errors");
+                Utils.OutputData(
+                    dataRowsNamesUsDataerrors,
+                    "Bad file, English US culture, various data errors");
             }
             catch (Exception e)
             {
@@ -255,12 +253,31 @@ namespace TestConsoleApplication
             // Create own IEnumarable, rather then using one created by reading a file.
             // Dutch, names in first line, don't limit writing to fields with CsvColumn attribute.
 
-            List<ProductData> dataRows_Test = new List<ProductData>();
-            dataRows_Test.Add(new ProductData { retailPrice = 4.59M, name = "Wooden toy", startDate = DateTime.Parse("1/2/2008"), nbrAvailable = 67 });
-            dataRows_Test.Add(new ProductData { onsale = true, weight = 4.03, shopsAvailable = "Ashfield", description = "" });
-            dataRows_Test.Add(new ProductData { name = "Metal box", launchTime = DateTime.Parse("5/11/2009 4:50"), description = "Great\nproduct" });
+            var dataRowsTest = new List<ProductData>
+            {
+                new ProductData
+                {
+                    retailPrice = 4.59M,
+                    name = "Wooden toy",
+                    startDate = DateTime.Parse("1/2/2008"),
+                    nbrAvailable = 67
+                },
+                new ProductData
+                {
+                    onsale = true,
+                    weight = 4.03,
+                    shopsAvailable = "Ashfield",
+                    description = ""
+                },
+                new ProductData
+                {
+                    name = "Metal box",
+                    launchTime = DateTime.Parse("5/11/2009 4:50"),
+                    description = "Great\nproduct"
+                }
+            };
 
-            CsvFileDescription fileDescription_namesNl2 = new CsvFileDescription
+            CsvFileDescription fileDescriptionNamesNl2 = new CsvFileDescription
             {
                 SeparatorChar = ',',
                 FirstLineHasColumnNames = true,
@@ -271,10 +288,10 @@ namespace TestConsoleApplication
 
             try
             {
-                cc.Write<ProductData>(
-                            dataRows_Test,
-                            "../../TestFiles/output_newdata_names_nl.csv",
-                            fileDescription_namesNl2);
+                cc.Write(
+                    dataRowsTest,
+                    "../../TestFiles/output_newdata_names_nl.csv",
+                    fileDescriptionNamesNl2);
             }
             catch (Exception e)
             {
@@ -285,20 +302,20 @@ namespace TestConsoleApplication
             // Write tab delimited file, US-English, no names in first line
             // using FieldIndices provided in CsvColumn attributes
 
-            CsvFileDescription fileDescription_nonamesUs_output = new CsvFileDescription
+            CsvFileDescription fileDescriptionNonamesUsOutput = new CsvFileDescription
             {
-                SeparatorChar = '\t', 
+                SeparatorChar = '\t',
                 FirstLineHasColumnNames = false,
-                EnforceCsvColumnAttribute = true, 
+                EnforceCsvColumnAttribute = true,
                 FileCultureName = "en-US" // default is the current culture
             };
 
             try
             {
-                cc.Write<ProductData>(
-                            dataRows_namesUs, 
-                            "../../TestFiles/output_nonames_us.csv",
-                            fileDescription_nonamesUs_output);
+                cc.Write(
+                    dataRowsNamesUs,
+                    "../../TestFiles/output_nonames_us.csv",
+                    fileDescriptionNonamesUsOutput);
             }
             catch (Exception e)
             {
@@ -309,9 +326,9 @@ namespace TestConsoleApplication
             // Write comma delimited file, Dutch, names in first line using 
             // CsvColumn attributes
 
-            CsvFileDescription fileDescription_namesNl = new CsvFileDescription
+            CsvFileDescription fileDescriptionNamesNl = new CsvFileDescription
             {
-                SeparatorChar = ',', 
+                SeparatorChar = ',',
                 FirstLineHasColumnNames = true,
                 EnforceCsvColumnAttribute = true,
                 TextEncoding = Encoding.Unicode,
@@ -320,10 +337,10 @@ namespace TestConsoleApplication
 
             try
             {
-                cc.Write<ProductData>(
-                            dataRows_namesUs, 
-                            "../../TestFiles/output_names_nl.csv",
-                            fileDescription_namesNl);
+                cc.Write(
+                    dataRowsNamesUs,
+                    "../../TestFiles/output_names_nl.csv",
+                    fileDescriptionNamesNl);
             }
             catch (Exception e)
             {
@@ -338,7 +355,7 @@ namespace TestConsoleApplication
             // FileCultureName is not set, so the current culture is used
             // (so if you are Canadian, the system uses Canadian dates, etc.)
 
-            CsvFileDescription fileDescription_anon = new CsvFileDescription
+            CsvFileDescription fileDescriptionAnon = new CsvFileDescription
             {
                 SeparatorChar = ',',
                 FirstLineHasColumnNames = true,
@@ -348,17 +365,19 @@ namespace TestConsoleApplication
 
             try
             {
-                var query = from row in dataRows_namesUs
-                            orderby row.weight
-                            select new { 
-                                ProductName = row.name,
-                                InShops = row.startDate,
-                                Markup = row.retailPrice * (decimal)0.5 };
+                var query = from row in dataRowsNamesUs
+                    orderby row.weight
+                    select new
+                    {
+                        ProductName = row.name,
+                        InShops = row.startDate,
+                        Markup = row.retailPrice * (decimal) 0.5
+                    };
 
                 cc.Write(
                     query,
                     "../../TestFiles/output_anon.csv",
-                    fileDescription_anon);
+                    fileDescriptionAnon);
             }
             catch (Exception e)
             {
@@ -375,10 +394,10 @@ namespace TestConsoleApplication
 
             try
             {
-                cc.Write<ProductData>(
-                            dataRows_namesUs, 
-                            "../../TestFiles/output_bad.csv",
-                            fileDescription_bad);
+                cc.Write(
+                    dataRowsNamesUs,
+                    "../../TestFiles/output_bad.csv",
+                    fileDescriptionBad);
             }
             catch (Exception e)
             {
@@ -389,7 +408,7 @@ namespace TestConsoleApplication
             // CsvFileDescription settings are good, but not all fields with CsvColumn attribute
             // have a FieldIndex.
 
-            CsvFileDescription fileDescription_nonamesNl_2 = new CsvFileDescription
+            CsvFileDescription fileDescriptionNonamesNl2 = new CsvFileDescription
             {
                 SeparatorChar = ',',
                 FirstLineHasColumnNames = false,
@@ -400,18 +419,17 @@ namespace TestConsoleApplication
 
             try
             {
-                List<ProductData_MissingFieldIndex> emptyData = new List<ProductData_MissingFieldIndex>();
+                var emptyData = new List<ProductData_MissingFieldIndex>();
 
-                cc.Write<ProductData_MissingFieldIndex>(
-                            emptyData,
-                            "../../TestFiles/output_bad.csv",
-                            fileDescription_nonamesNl_2);
+                cc.Write(
+                    emptyData,
+                    "../../TestFiles/output_bad.csv",
+                    fileDescriptionNonamesNl2);
             }
             catch (Exception e)
             {
                 Utils.OutputException(e);
             }
-
         }
     }
 }

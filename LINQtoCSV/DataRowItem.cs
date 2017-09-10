@@ -1,29 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace LINQtoCSV
+﻿namespace LINQtoCSV
 {
     public class DataRowItem
     {
-        private string m_value;
-        private int m_lineNbr;
-
         public DataRowItem(string value, int lineNbr)
         {
-            m_value = value;
-            m_lineNbr = lineNbr;
+            Value = value;
+            LineNbr = lineNbr;
         }
 
-        public int LineNbr
-        {
-            get { return m_lineNbr; }
-        }
+        public int LineNbr { get; }
 
-        public string Value
-        {
-            get { return m_value; }
-        }
+        public string Value { get; }
     }
 }

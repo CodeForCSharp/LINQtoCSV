@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,63 +6,60 @@ using System.Text;
 namespace LINQtoCSV
 {
     /// <summary>
-    /// Based on code found at
-    /// http://knab.ws/blog/index.php?/archives/3-CSV-file-parser-and-writer-in-C-Part-1.html
-    /// and
-    /// http://knab.ws/blog/index.php?/archives/10-CSV-file-parser-and-writer-in-C-Part-2.html
+    ///     Based on code found at
+    ///     http://knab.ws/blog/index.php?/archives/3-CSV-file-parser-and-writer-in-C-Part-1.html
+    ///     and
+    ///     http://knab.ws/blog/index.php?/archives/10-CSV-file-parser-and-writer-in-C-Part-2.html
     /// </summary>
     internal class CsvStream
     {
-        private TextReader m_instream;
-        private TextWriter m_outStream;
-        private char m_SeparatorChar;
-        private char[] m_SpecialChars;
-        private bool m_IgnoreTrailingSeparatorChar;
+        private readonly char[] buffer = new char[4096];
+        private bool EOL;
+
+        private bool EOS;
+        private int length;
+        private readonly bool m_IgnoreTrailingSeparatorChar;
+        private readonly TextReader m_instream;
 
         // Current line number in the file. Only used when reading a file, not when writing a file.
         private int m_lineNbr;
 
+        private readonly TextWriter m_outStream;
+        private readonly char m_SeparatorChar;
+        private readonly char[] m_SpecialChars;
+        private int pos;
+        private bool previousWasCr;
+
         /// ///////////////////////////////////////////////////////////////////////
         /// CsvStream
-        /// 
-        public CsvStream(TextReader inStream, TextWriter outStream, char SeparatorChar, bool IgnoreTrailingSeparatorChar)
+        public CsvStream(TextReader inStream, TextWriter outStream, char SeparatorChar,
+            bool IgnoreTrailingSeparatorChar)
         {
             m_instream = inStream;
             m_outStream = outStream;
             m_SeparatorChar = SeparatorChar;
             m_IgnoreTrailingSeparatorChar = IgnoreTrailingSeparatorChar;
-            m_SpecialChars = ("\"\x0A\x0D" + m_SeparatorChar.ToString()).ToCharArray();
+            m_SpecialChars = ("\"\x0A\x0D" + m_SeparatorChar).ToCharArray();
             m_lineNbr = 1;
         }
 
         /// ///////////////////////////////////////////////////////////////////////
         /// WriteRow
-        /// 
         public void WriteRow(List<string> row, bool quoteAllFields)
         {
-            bool firstItem = true;
-            foreach (string item in row)
+            var firstItem = true;
+            foreach (var item in row)
             {
-                if (!firstItem) { m_outStream.Write(m_SeparatorChar); }
+                if (!firstItem) m_outStream.Write(m_SeparatorChar);
 
                 // If the item is null, don't write anything.
                 if (item != null)
-                {
-                    // If user always wants quoting, or if the item has special chars
-                    // (such as "), or if item is the empty string or consists solely of
-                    // white space, surround the item with quotes.
-
-                    if ((quoteAllFields ||
-                        (item.IndexOfAny(m_SpecialChars) > -1) ||
-                        (item.Trim() == "")))
-                    {
+                    if (quoteAllFields ||
+                        item.IndexOfAny(m_SpecialChars) > -1 ||
+                        item.Trim() == "")
                         m_outStream.Write("\"" + item.Replace("\"", "\"\"") + "\"");
-                    }
                     else
-                    {
                         m_outStream.Write(item);
-                    }
-                }
 
                 firstItem = false;
             }
@@ -74,43 +70,38 @@ namespace LINQtoCSV
 
         /// ///////////////////////////////////////////////////////////////////////
         /// ReadRow
-        /// 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="row">
-        /// Contains the values in the current row, in the order in which they 
-        /// appear in the file.
+        ///     Contains the values in the current row, in the order in which they
+        ///     appear in the file.
         /// </param>
         /// <returns>
-        /// True if a row was returned in parameter "row".
-        /// False if no row returned. In that case, you're at the end of the file.
+        ///     True if a row was returned in parameter "row".
+        ///     False if no row returned. In that case, you're at the end of the file.
         /// </returns>
         public bool ReadRow(IDataRow row, List<int> charactersLength = null)
         {
             row.Clear();
 
-            int i = 0;
+            var i = 0;
 
             while (true)
             {
                 // Number of the line where the item starts. Note that an item
                 // can span multiple lines.
-                int startingLineNbr = m_lineNbr;
+                var startingLineNbr = m_lineNbr;
 
                 string item = null;
 
-                int? itemLength = charactersLength == null ? (int?)null : charactersLength.Skip(i).First();
+                var itemLength = charactersLength?.Skip(i).First();
 
-                bool moreAvailable = GetNextItem(ref item, itemLength);
+                var moreAvailable = GetNextItem(ref item, itemLength);
                 if (charactersLength != null)
-                {
                     if (!(charactersLength.Count() > i + 1))
                     {
                         if (moreAvailable)
-                        {
                             row.Add(new DataRowItem(item, startingLineNbr));
-                        }
 
                         if (!EOL)
                         {
@@ -118,12 +109,9 @@ namespace LINQtoCSV
                             moreAvailable = false;
                         }
                     }
-                }
 
                 if (!moreAvailable)
-                {
-                    return (row.Count > 0);
-                }
+                    return row.Count > 0;
 
                 row.Add(new DataRowItem(item, startingLineNbr));
 
@@ -131,15 +119,11 @@ namespace LINQtoCSV
             }
         }
 
-        private bool EOS = false;
-        private bool EOL = false;
-        private bool previousWasCr = false;
-
         private void AdvanceToEndOfLine()
         {
             while (true)
             {
-                char c = GetNextChar(true);
+                var c = GetNextChar(true);
 
                 if (EOS)
                     break;
@@ -152,10 +136,7 @@ namespace LINQtoCSV
                     // we are at the end of the line, eat newline characters and exit
                     EOL = true;
                     if (c == '\x0D' && GetNextChar(false) == '\x0A')
-                    {
-                        // new line sequence is 0D0A
                         GetNextChar(true);
-                    }
                     EOL = false;
 
                     break;
@@ -173,13 +154,13 @@ namespace LINQtoCSV
                 return false;
             }
 
-            bool itemFound = false;
-            bool quoted = false;
-            bool predata = true;
-            bool postdata = false;
-            StringBuilder item = new StringBuilder();
+            var itemFound = false;
+            var quoted = false;
+            var predata = true;
+            var postdata = false;
+            var item = new StringBuilder();
 
-            int cnt = 0;
+            var cnt = 0;
             while (true)
             {
                 if (itemLength.HasValue && cnt >= itemLength.Value)
@@ -189,12 +170,12 @@ namespace LINQtoCSV
                 }
 
 
-                char c = GetNextChar(true);
+                var c = GetNextChar(true);
                 cnt++;
 
                 if (EOS)
                 {
-                    if (itemFound) { itemString = item.ToString(); }
+                    if (itemFound) itemString = item.ToString();
                     return itemFound;
                 }
 
@@ -204,10 +185,8 @@ namespace LINQtoCSV
                 // end of a record.
 
                 // Don't count 0D0A as two line breaks.
-                if ((!previousWasCr) && (c == '\x0A'))
-                {
+                if (!previousWasCr && c == '\x0A')
                     m_lineNbr++;
-                }
 
                 if (c == '\x0D') //'\r'
                 {
@@ -221,16 +200,16 @@ namespace LINQtoCSV
 
                 // ---------
 
-                if ((postdata || !quoted) && (itemLength == null && c == m_SeparatorChar))
+                if ((postdata || !quoted) && itemLength == null && c == m_SeparatorChar)
                 {
                     if (m_IgnoreTrailingSeparatorChar)
                     {
-                        char nC = GetNextChar(false);
-                        if ((nC == '\x0A' || nC == '\x0D'))
+                        var nC = GetNextChar(false);
+                        if (nC == '\x0A' || nC == '\x0D')
                             continue;
                     }
                     // end of item, return
-                    if (itemFound) { itemString = item.ToString(); }
+                    if (itemFound) itemString = item.ToString();
                     return true;
                 }
 
@@ -239,12 +218,9 @@ namespace LINQtoCSV
                     // we are at the end of the line, eat newline characters and exit
                     EOL = true;
                     if (c == '\x0D' && GetNextChar(false) == '\x0A')
-                    {
-                        // new line sequence is 0D0A
                         GetNextChar(true);
-                    }
 
-                    if (itemFound) { itemString = item.ToString(); }
+                    if (itemFound) itemString = item.ToString();
                     return true;
                 }
 
@@ -273,15 +249,9 @@ namespace LINQtoCSV
                 if (c == '"' && quoted)
                 {
                     if (GetNextChar(false) == '"')
-                    {
-                        // double quotes within quoted string means add a quote       
                         item.Append(GetNextChar(true));
-                    }
                     else
-                    {
-                        // end-quote reached
                         postdata = true;
-                    }
 
                     continue;
                 }
@@ -290,10 +260,6 @@ namespace LINQtoCSV
                 item.Append(c);
             }
         }
-
-        private char[] buffer = new char[4096];
-        private int pos = 0;
-        private int length = 0;
 
         private char GetNextChar(bool eat)
         {
@@ -309,8 +275,7 @@ namespace LINQtoCSV
             }
             if (eat)
                 return buffer[pos++];
-            else
-                return buffer[pos];
+            return buffer[pos];
         }
     }
 }
